@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Astral Arena 3D</title>
+    <title>Astral Raid - Boss Battle</title>
     <style>
         * { touch-action: none; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; user-select: none; }
+        body { margin: 0; overflow: hidden; background-color: #1a0510; font-family: sans-serif; user-select: none; }
         #canvas-container { width: 100vw; height: 100vh; position: absolute; top:0; left:0; }
         
         #ui-layer {
@@ -14,61 +14,62 @@
             pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;
         }
         .hud-top {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 12px;
-            margin: 10px; border: 2px solid #ffaa00; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; align-items: center;
+            background: rgba(20, 10, 25, 0.85); padding: 12px; border-radius: 14px;
+            margin: 15px; border: 2px solid #ff3355; box-shadow: 0 0 15px rgba(255,51,85,0.4);
         }
-        .stat-box { color: #333; font-weight: bold; font-size: 14px; }
-        .greed-meter { width: 100px; height: 12px; background: #eee; border-radius: 6px; overflow: hidden; border: 1px solid #ff5555; }
-        .greed-fill { width: 30%; height: 100%; background: #ff5555; transition: width 0.3s; }
+        .boss-name { color: #ff3355; font-weight: bold; font-size: 14px; margin-bottom: 5px; text-shadow: 0 0 8px #ff3355; }
+        .boss-hp-bar { width: 80vw; max-width: 400px; height: 14px; background: #331122; border-radius: 7px; overflow: hidden; border: 1px solid #ff5577; }
+        .boss-hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ffaa00); transition: width 0.2s; }
+
+        .hud-sub {
+            display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box; margin-top: 5px;
+        }
+        .stat-box { color: #fff; font-weight: bold; font-size: 13px; text-shadow: 0 0 5px #00ffff; }
 
         /* Joystick Zone */
         #joystick-zone {
             position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px;
-            background: rgba(255, 255, 255, 0.5); border: 3px solid #ffaa00;
+            background: rgba(255, 255, 255, 0.15); border: 3px solid rgba(0,255,255,0.6);
             border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center;
         }
         #joystick-knob {
-            width: 50px; height: 50px; background: #ffaa00; border-radius: 50%; pointer-events: none;
+            width: 50px; height: 50px; background: #00ffff; border-radius: 50%; pointer-events: none;
+            box-shadow: 0 0 10px #00ffff;
         }
 
         /* Buttons Zone */
         .hud-bottom-right {
-            position: absolute; bottom: 30px; right: 20px; display: flex; gap: 10px; pointer-events: auto;
+            position: absolute; bottom: 30px; right: 20px; display: flex; gap: 12px; pointer-events: auto;
         }
         .skill-btn {
-            width: 60px; height: 60px; background: #fff; border: 3px solid #00aaff;
-            border-radius: 50%; color: #00aaff; font-weight: bold; font-size: 14px;
+            width: 65px; height: 65px; background: rgba(20,20,40,0.8); border: 3px solid #00ffff;
+            border-radius: 50%; color: #00ffff; font-weight: bold; font-size: 13px;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 0 10px rgba(0,255,255,0.4);
         }
-
-        #error-log {
-            position: absolute; top: 70px; left: 10px; color: red; background: rgba(0,0,0,0.8);
-            padding: 10px; border-radius: 8px; display: none; font-size: 12px; max-width: 90vw; z-index: 999;
-        }
+        .skill-btn:active { transform: scale(0.9); background: rgba(0,255,255,0.3); }
 
         #game-over {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #fff; color: #333; padding: 30px; border-radius: 20px;
-            border: 4px solid #ff5555; text-align: center; display: none; pointer-events: auto;
+            background: #110515; color: #fff; padding: 35px; border-radius: 20px;
+            border: 3px solid #ff0055; text-align: center; display: none; pointer-events: auto;
+            box-shadow: 0 0 30px rgba(255,0,85,0.6);
         }
     </style>
-    <!-- 백업 CDN 연결 -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 </head>
 <body>
     <div id="canvas-container"></div>
-    <div id="error-log"></div>
 
     <div id="ui-layer">
         <div class="hud-top">
-            <div class="stat-box" id="score-display">0s | W1</div>
-            <div>
-                <span style="color: #ff5555; font-size: 10px; font-weight: bold;">GREED</span>
-                <div class="greed-meter"><div class="greed-fill" id="greed-bar"></div></div>
+            <div class="boss-name">🔥 [Raid Boss] 크리스탈 드래곤</div>
+            <div class="boss-hp-bar"><div class="boss-hp-fill" id="boss-hp-bar"></div></div>
+            <div class="hud-sub">
+                <div class="stat-box" id="time-display">⏱️ 0s</div>
+                <div class="stat-box" style="color:#ffcc00;" id="score-display">💎 0</div>
             </div>
-            <div class="stat-box" style="color:#ffaa00;" id="relic-display">💎 0</div>
         </div>
 
         <div id="joystick-zone">
@@ -76,37 +77,25 @@
         </div>
 
         <div class="hud-bottom-right">
-            <div class="skill-btn" id="btn-q">공격</div>
-            <div class="skill-btn" style="border-color:#ff5555; color:#ff5555;" id="btn-r">폭발</div>
+            <div class="skill-btn" id="btn-q">차원참</div>
+            <div class="skill-btn" style="border-color:#ff0055; color:#ff0055;" id="btn-r">초신성</div>
         </div>
     </div>
 
     <div id="game-over">
-        <h2 style="color: #ff5555; margin: 0;">GAME OVER</h2>
-        <p id="final-stats">생존 시간: 0초</p>
-        <button style="padding: 10px 20px; background: #ff5555; color:#fff; border:none; border-radius:8px; font-weight:bold;" onclick="location.reload()">다시 시작</button>
+        <h2 id="result-title" style="color: #ff0055; margin: 0 0 10px 0;">DEFEATED</h2>
+        <p id="final-stats" style="color: #aaa;">보스에게 패배했습니다.</p>
+        <button style="padding: 12px 25px; background: #ff0055; color:#fff; border:none; border-radius:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">다시 도전</button>
     </div>
 
     <script>
-        // 에러 감지용 스크립트
-        window.onerror = function(msg, url, line) {
-            const errBox = document.getElementById('error-log');
-            errBox.style.display = 'block';
-            errBox.innerHTML = `⚠️ 에러 발생: ${msg} (Line: ${line})`;
-        };
-
-        // 3D Scene 준비
-        if (typeof THREE === 'undefined') {
-            document.getElementById('error-log').style.display = 'block';
-            document.getElementById('error-log').innerText = '⚠️ Three.js 3D 엔진을 불러오지 못했습니다. 인터넷 연결을 확인해주세요.';
-        }
-
         const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xddeeff);
+        const scene = new 동적씬 = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0510);
+        scene.fog = new THREE.FogExp2(0x0a0510, 0.02);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 18, 14);
+        camera.position.set(0, 20, 18);
         camera.lookAt(0, 0, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -114,35 +103,58 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
-        // 조명
-        const light = new THREE.DirectionalLight(0xffffff, 1.2);
-        light.position.set(10, 20, 10);
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0x666666));
+        // 조명 (붉은 보스 광원 효과)
+        scene.add(new THREE.AmbientLight(0x403050, 1.5));
+        const bossLight = new THREE.PointLight(0xff0055, 3, 20);
+        bossLight.position.set(0, 5, -8);
+        scene.add(bossLight);
 
-        // 맵 (원형 아레나)
+        // 배틀 아레나 맵
         const platform = new THREE.Mesh(
-            new THREE.CylinderGeometry(15, 15, 1, 32),
-            new THREE.MeshLambertMaterial({ color: 0x88cc44 })
+            new THREE.CylinderGeometry(16, 17, 1, 32),
+            new THREE.MeshStandardMaterial({ color: 0x151025, roughness: 0.8 })
         );
         platform.position.y = -0.5;
         scene.add(platform);
 
         // 플레이어 캐릭터
         const player = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.5, 0.5, 1.5, 16),
-            new THREE.MeshLambertMaterial({ color: 0x00aaff })
+            new THREE.CapsuleGeometry(0.4, 0.8, 8, 16),
+            new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x004466 })
         );
-        player.position.y = 0.75;
+        player.position.set(0, 0.8, 8);
         scene.add(player);
 
-        // 게임 변수
-        let enemies = [], relics = [];
-        let score = 0, greed = 30, isGameOver = false;
+        // --- 거대 보스 몬스터 (크리스탈 드래곤 느낌) ---
+        const bossGroup = new THREE.Group();
+        const bossBody = new THREE.Mesh(
+            new THREE.BoxGeometry(3.5, 2.5, 4),
+            new THREE.MeshStandardMaterial({ color: 0x332233, roughness: 0.5 })
+        );
+        bossBody.position.y = 1.5;
+        bossGroup.add(bossBody);
+
+        // 보스 등껍질 수정 가시들
+        for(let i = -1.5; i <= 1.5; i += 1.0) {
+            const crystal = new THREE.Mesh(
+                new THREE.ConeGeometry(0.6, 2.5, 4),
+                new THREE.MeshStandardMaterial({ color: 0xff0044, emissive: 0x550011 })
+            );
+            crystal.position.set(i, 3.2, 0);
+            bossGroup.add(crystal);
+        }
+        bossGroup.position.set(0, 0, -8);
+        scene.add(bossGroup);
+
+        // 게임 상태
+        let bossHp = 1000;
+        const maxBossHp = 1000;
+        let score = 0, isGameOver = false;
         let startTime = Date.now();
         let moveVec = { x: 0, z: 0 };
+        let projectiles = [];
 
-        // 조이스틱 조작
+        // 조이스틱
         const joyZone = document.getElementById('joystick-zone');
         const joyKnob = document.getElementById('joystick-knob');
         let joyActive = false;
@@ -157,10 +169,8 @@
 
         function updateJoy(e) {
             const rect = joyZone.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const dx = e.clientX - cx;
-            const dy = e.clientY - cy;
+            const dx = e.clientX - (rect.left + rect.width / 2);
+            const dy = e.clientY - (rect.top + rect.height / 2);
             const dist = Math.min(Math.hypot(dx, dy), 40);
             const angle = Math.atan2(dy, dx);
             joyKnob.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
@@ -168,87 +178,99 @@
             moveVec.z = (Math.sin(angle)*dist) / 40;
         }
 
-        // 키보드 조작 (PC)
-        let keys = {};
-        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-        // 스킬
+        // 스킬 버튼 액션 (보스 타격)
         document.getElementById('btn-q').addEventListener('click', () => {
             if(isGameOver) return;
-            const ring = new THREE.Mesh(
-                new THREE.RingGeometry(0.5, 3, 16),
-                new THREE.MeshBasicMaterial({ color: 0x00aaff, side: THREE.DoubleSide })
-            );
-            ring.rotation.x = -Math.PI / 2;
-            ring.position.copy(player.position);
-            scene.add(ring);
-            setTimeout(() => scene.remove(ring), 200);
-
-            enemies.forEach(e => {
-                if(e.mesh.position.distanceTo(player.position) < 3.5) e.hp -= 30;
-            });
+            createSlashEffect(player.position);
+            if(player.position.distanceTo(bossGroup.position) < 7) {
+                bossHp -= 40;
+                checkBossHp();
+            }
         });
 
         document.getElementById('btn-r').addEventListener('click', () => {
             if(isGameOver) return;
-            greed = Math.min(100, greed + 15);
-            enemies.forEach(e => {
-                if(e.mesh.position.distanceTo(player.position) < 6) e.hp -= 100;
-            });
+            createNovaEffect(player.position);
+            if(player.position.distanceTo(bossGroup.position) < 10) {
+                bossHp -= 150;
+                checkBossHp();
+            }
         });
 
-        // 적 스폰
+        function createSlashEffect(pos) {
+            const ring = new THREE.Mesh(
+                new THREE.RingGeometry(0.5, 3, 16),
+                new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+            );
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.copy(pos);
+            ring.position.y = 0.2;
+            scene.add(ring);
+            setTimeout(() => scene.remove(ring), 250);
+        }
+
+        function createNovaEffect(pos) {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(5, 16, 16),
+                new THREE.MeshBasicMaterial({ color: 0xff0055, wireframe: true })
+            );
+            sphere.position.copy(pos);
+            scene.add(sphere);
+            setTimeout(() => scene.remove(sphere), 300);
+        }
+
+        function checkBossHp() {
+            document.getElementById('boss-hp-bar').style.width = `${Math.max(0, (bossHp / maxBossHp) * 100)}%`;
+            if(bossHp <= 0) {
+                isGameOver = true;
+                document.getElementById('result-title').innerText = "VICTORY!";
+                document.getElementById('result-title').style.color = "#00ffff";
+                document.getElementById('final-stats').innerText = "보스를 처치하고 승리했습니다!";
+                document.getElementById('game-over').style.display = 'block';
+            }
+        }
+
+        // 보스의 공격 패턴 (주기적으로 플레이어에게 탄환 발사)
         setInterval(() => {
             if(isGameOver) return;
-            const enemyMesh = new THREE.Mesh(
-                new THREE.BoxGeometry(1, 1, 1),
-                new THREE.MeshLambertMaterial({ color: 0xff3355 })
+            const proj = new THREE.Mesh(
+                new THREE.SphereGeometry(0.4, 8, 8),
+                new THREE.MeshBasicMaterial({ color: 0xff3300 })
             );
-            const angle = Math.random() * Math.PI * 2;
-            enemyMesh.position.set(Math.cos(angle) * 14, 0.5, Math.sin(angle) * 14);
-            scene.add(enemyMesh);
-            enemies.push({ mesh: enemyMesh, hp: 20, speed: 0.05 });
-        }, 1500);
+            proj.position.copy(bossGroup.position);
+            proj.position.y = 2;
+            scene.add(proj);
+            
+            // 플레이어 방향 향하기
+            const dir = new THREE.Vector3().subVectors(player.position, proj.position).normalize();
+            projectiles.push({ mesh: proj, dir: dir, speed: 0.1 });
+        }, 2000);
 
-        // 메인 게임 루프
+        // 메인 루프
         function animate() {
             if(isGameOver) return;
             requestAnimationFrame(animate);
 
-            // 이동 처리
-            let dx = moveVec.x;
-            let dz = moveVec.z;
-            if (keys['w'] || keys['arrowup']) dz = -1;
-            if (keys['s'] || keys['arrowdown']) dz = 1;
-            if (keys['a'] || keys['arrowleft']) dx = -1;
-            if (keys['d'] || keys['arrowright']) dx = 1;
-
-            player.position.x += dx * 0.12;
-            player.position.z += dz * 0.12;
+            // 플레이어 이동
+            player.position.x += moveVec.x * 0.13;
+            player.position.z += moveVec.z * 0.13;
             player.position.x = Math.max(-13, Math.min(13, player.position.x));
             player.position.z = Math.max(-13, Math.min(13, player.position.z));
 
-            // 적 AI 및 충돌
-            enemies.forEach((e, idx) => {
-                e.mesh.lookAt(player.position);
-                e.mesh.translateZ(e.speed);
-
-                if(e.mesh.position.distanceTo(player.position) < 0.9) {
+            // 보스 투사체 업데이트 및 충돌 체크
+            projectiles.forEach((p, idx) => {
+                p.mesh.position.addScaledVector(p.dir, p.speed);
+                if(p.mesh.position.distanceTo(player.position) < 0.8) {
                     isGameOver = true;
+                    document.getElementById('result-title').innerText = "DEFEATED";
+                    document.getElementById('final-stats').innerText = "보스의 공격에 쓰러졌습니다.";
                     document.getElementById('game-over').style.display = 'block';
-                }
-
-                if(e.hp <= 0) {
-                    scene.remove(e.mesh);
-                    enemies.splice(idx, 1);
                 }
             });
 
-            // HUD
+            // 시간 표시
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            document.getElementById('score-display').innerText = `${elapsed}s | W1`;
-            document.getElementById('greed-bar').style.width = `${greed}%`;
+            document.getElementById('time-display').innerText = `⏱️ ${elapsed}s`;
 
             renderer.render(scene, camera);
         }
